@@ -128,8 +128,15 @@ function addSDCImportFns(ns) {
       for(var i = 0; i < qItem.answerOption.length; i++) {
         var answer = {};
         var option = qItem.answerOption[i];
-
-        var optionKey = Object.keys(option).filter(function(key) {return (key.indexOf('value') === 0);});
+        var optionKey = [];
+        if(option.hasOwnProperty('valueInteger') && option.hasOwnProperty('extension')){
+          if(option.extension &&  option.extension[0].url == 'http://hl7.org/fhir/StructureDefinition/displayValue'){
+            option['intExtvalue'] = option.extension[0].valueString;
+            optionKey.push('intExtvalue');
+          }
+        } else {
+          optionKey = Object.keys(option).filter(function(key) {return (key.indexOf('value') === 0);});
+        } 
         if(optionKey && optionKey.length > 0) {
           // For a given answerOption, only one value[x] is expectedOnly one kind of value[x] is expected
           if(optionKey[0] === 'valueCoding') {
@@ -146,6 +153,9 @@ function addSDCImportFns(ns) {
           }
           else if (optionKey[0] === 'valueInteger') {
             answer.text = parseInt(option[optionKey[0]])
+          }
+          else if(optionKey[0] === 'intExtvalue'){
+            answer.text = option[optionKey[0]];
           }
           else {
             throw new Error('Unable to handle data type in answerOption: ' + optionKey[0]);
